@@ -33,8 +33,11 @@
 #include "Navigation/Navigator.hpp"
 #include "SmartMap.hpp"
 #include "Dev/DevConsole.hpp"
+#include "Video/AudioDescription.hpp"
+#include "Video/AudioDescription_G1.hpp"
 
 #include "Hooks/oCAIHuman.hpp"
+#include "Hooks/zCBinkPlayer.hpp"
 #include "Hooks/oCWorld.hpp"
 #include "Hooks/oCGame.hpp"
 #include "Hooks/oCItemContainer.hpp"

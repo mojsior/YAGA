@@ -91,6 +91,11 @@ Language of the messages YAGA speaks itself (the game's own texts are always in 
 
 The default value is `auto`.
 
+### AudioDescription
+
+With `1`, the intro video of Gothic 1, played when a new game starts, is described through the screen reader. See [Audio description](#audio-description). `0` turns it off.
+The default value is `1`.
+
 ### DevCommands
 
 Development aid. With `1` the plugin reads commands from `yaga_cmd.txt` in the game folder and writes the results to `YAGA.log`: position, route planning, benchmarks, teleporting, an invulnerable hero with monsters removed around it (`god`, `peace`), way net and height map dumps (`dumpnet`, `heightmap`), a graph check of every sector (`routeall`) and a walk through a list of destinations (`tour`).
@@ -126,6 +131,18 @@ avoid A B              # a way of the game's way net the hero cannot walk
 With `DevCommands=1`, `patch` reloads the file and `rec start NAME` / `rec stop` record the hero's walk into `yaga_rec.txt` in this format.
 
 Every spoken line and every navigator decision is written to `YAGA.log` in the game folder. Attach it to bug reports.
+
+## Audio description
+
+The Gothic 1 intro (`INTRO.BIK`) is described in short lines, in Polish or English (see [Language](#language)), through the screen reader.
+
+- **When.** Each line is said in a pause of the narration and dialogue, so it does not cover anyone speaking. The lines follow the video's own frame counter, so they stay in time if the video stutters.
+- **What.** The lines say what is on screen: the throne room, the battle with the orcs, the mines, the Barrier, the hero thrown from the cliff.
+- **Names.** The people are named where the game names them: the narrator Xardas, King Rhobar II, Bullit and Diego.
+- **Skipping.** `ESC` skips the video and silences the line being said.
+- **Timing.** The pauses were measured on the Polish release. Another release of the intro with the same length gets the same timing. A video of another length, such as a mod's own intro, gets no description.
+
+The description lines are in `src/Video/AudioDescription_G1.hpp`. The time of every line and the video time when it was said go to `YAGA.log` as `[video]`.
 
 ## TODO
 

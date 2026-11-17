@@ -23,6 +23,8 @@ inline int NavigatorProgressEvery;
 inline int DevCommands;
 // Language of spoken messages: "auto" (the game's language), "pl" or "en".
 inline std::string Language;
+// 1 = describe videos (the Gothic 1 intro) in the pauses of their dialogue, 0 = off.
+inline int AudioDescription;
 } // namespace Settings
 
 #endif
@@ -43,6 +45,7 @@ void LoadSpeechEngineSettings()
     Settings::NavigatorProgressEvery = zoptions->ReadInt("YAGA", "NavigatorProgressEvery", 5);
     Settings::DevCommands = zoptions->ReadInt("YAGA", "DevCommands", 0);
     Settings::Language = zoptions->ReadString("YAGA", "Language", "auto").ToChar();
+    Settings::AudioDescription = zoptions->ReadInt("YAGA", "AudioDescription", 1);
 }
 } // namespace GOTHIC_NAMESPACE
 
