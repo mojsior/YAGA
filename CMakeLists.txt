@@ -13,6 +13,10 @@ project(YAGA
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# One C runtime (the DLL one) for the plugin and every library linked into it. A normal variable, so it wins over the
+# cache entry Prism sets for its own builds.
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+
 file(GLOB_RECURSE SRC
     "src/*.cpp"
 	"resources/*.h"

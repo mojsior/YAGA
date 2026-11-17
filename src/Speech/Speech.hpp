@@ -4,25 +4,11 @@ namespace Speech
 {
 std::unique_ptr<SpeechEngine> engine;
 
-void Initialize(const int engineId)
+// All speech goes through Prism: the running screen reader, or a speech engine when none runs.
+void Initialize(const std::string &backend, const int rate, const int volume)
 {
-    switch (engineId)
-    {
-    case 0:
-        engine = std::make_unique<SpeechEngineZhengdu>();
-        break;
-
-    case 1:
-        engine = std::make_unique<SpeechEngineNVDA>();
-        break;
-
-    case 2:
-        engine = std::make_unique<SpeechEngineSAPI>();
-        break;
-
-    default:
-        break;
-    }
+    YagaLog::Write("[speech] Prism, asked for backend " + backend);
+    engine = std::make_unique<SpeechEnginePrism>(backend, rate, volume);
 }
 
 void StopReading()
