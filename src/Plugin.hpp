@@ -35,6 +35,7 @@ void Game_Loop()
     if (ogame->singleStep)
         return;
 
+    Speech::SayPendingWarning();
     SpatialCues::BeginFrame();
     Raycast();
 

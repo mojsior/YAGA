@@ -26,6 +26,12 @@ class SpeechEnginePrism : public SpeechEngine
     // Name of the backend in use, for the log.
     std::string BackendName() const;
 
+    // Path of an outdated ZDSRAPI.dll loaded into the game (it blocks the ZDSR backend), or empty.
+    const std::wstring &StaleZdsrLibrary() const
+    {
+        return staleZdsrLibrary;
+    }
+
   private:
     bool Connect();
     void Configure();
@@ -38,6 +44,9 @@ class SpeechEnginePrism : public SpeechEngine
     float rate;
     float volume;
     bool screenReader = false;
+    unsigned long long features = 0;
+    bool brailleFailed = false;
     std::string lastBackend;
     unsigned long long lastConnectAttempt = 0;
+    std::wstring staleZdsrLibrary;
 };

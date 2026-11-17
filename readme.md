@@ -52,6 +52,8 @@ YAGA speaks through [Prism](https://github.com/ethindp/prism), which talks to th
 Text also goes to the braille display when the screen reader supports it.  
 The default value is `auto`.
 
+Prism uses the ZDSR library installed with the screen reader. If an older YAGA was copied into the game by hand, delete `ZDSRAPI.dll` and `nvdaControllerClient32.dll` from `Gothic\system\Autorun`: the old `ZDSRAPI.dll` is loaded by Union first and keeps ZDSR from working. YAGA says so when it finds it.
+
 ### SpeechRate
 
 Rate of a Windows voice (screen readers keep their own settings), from `0` to `100`.  

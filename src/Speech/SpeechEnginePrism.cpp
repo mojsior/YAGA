@@ -42,6 +42,14 @@ std::string NameOf(PrismBackend *backend)
 }
 
 // Speech engines (as opposed to screen readers) are known by their backend id.
+// Prism's own messages (which libraries it found, why a backend did not start) go to YAGA.log as well.
+void PRISM_CALL LogFromPrism(void *, PrismLogLevel level, const char *source, const char *message)
+{
+    static const char *levels[] = {"trace", "debug", "info", "warn", "error"};
+    const char *name = level >= PRISM_LOG_LEVEL_TRACE && level <= PRISM_LOG_LEVEL_ERROR ? levels[level] : "?";
+    YagaLog::Write(std::format("[prism] {} {}: {}", name, source ? source : "-", message ? message : ""));
+}
+
 bool IsScreenReader(PrismContext *context, PrismBackend *backend)
 {
     const char *name = backend ? prism_backend_name(backend) : nullptr;
@@ -53,6 +61,20 @@ bool IsScreenReader(PrismContext *context, PrismBackend *backend)
 SpeechEnginePrism::SpeechEnginePrism(const std::string &backendName, const int rate, const int volume)
     : SpeechEngine(L"Prism"), requested(backendName), rate(Normalized(rate)), volume(Normalized(volume))
 {
+    // An old ZDSRAPI.dll left in system\Autorun by an earlier YAGA is loaded by Union before Prism looks for the
+    // library, and Prism then refuses it (it lacks the Braille function), so ZDSR is never used.
+    if (HMODULE zdsr = GetModuleHandleW(L"ZDSRAPI.dll"); zdsr && !GetProcAddress(zdsr, "Braille"))
+    {
+        wchar_t path[MAX_PATH] = {};
+        GetModuleFileNameW(zdsr, path, MAX_PATH);
+        staleZdsrLibrary = path;
+        YagaLog::Write(L"[speech] an old ZDSRAPI.dll keeps Prism from using ZDSR: " + staleZdsrLibrary);
+    }
+
+    PrismLogHandler handler{};
+    handler.fn = &LogFromPrism;
+    prism_set_log_handler(handler);
+    prism_set_log_level(PRISM_LOG_LEVEL_TRACE);
     context = prism_init(nullptr);
     Connect();
 }
@@ -111,6 +133,8 @@ bool SpeechEnginePrism::Connect()
 void SpeechEnginePrism::Configure()
 {
     screenReader = IsScreenReader(context, backend);
+    features = prism_backend_get_features(backend);
+    brailleFailed = false;
     if (NameOf(backend) != lastBackend)
     {
         lastBackend = NameOf(backend);
@@ -121,7 +145,6 @@ void SpeechEnginePrism::Configure()
         return;
 
     // Screen readers keep their own voice settings; a speech engine gets the plugin's.
-    const uint64_t features = prism_backend_get_features(backend);
     if (features & PRISM_BACKEND_SUPPORTS_SET_RATE)
         (void)prism_backend_set_rate(backend, rate);
     if (features & PRISM_BACKEND_SUPPORTS_SET_VOLUME)
@@ -164,18 +187,26 @@ int SpeechEnginePrism::Read(const wchar_t *message, const int interrupt)
     if (text.empty())
         return 0;
 
-    PrismError error = prism_backend_output(backend, text.c_str(), interrupt != 0);
-    if (error == PRISM_ERROR_NOT_IMPLEMENTED)
-        error = prism_backend_speak(backend, text.c_str(), interrupt != 0);
+    // Speech and braille separately (not prism_backend_output): without a braille display some screen readers report
+    // the braille part as failed, and that must not count as failed speech.
+    PrismError error = prism_backend_speak(backend, text.c_str(), interrupt != 0);
     if (error != PRISM_OK)
     {
         YagaLog::Write(std::format("[speech] {} failed: {}", NameOf(backend), prism_error_string(error)));
         // The screen reader was closed or restarted: connect again (a speech engine if no screen reader runs).
         if (Connect())
+            error = prism_backend_speak(backend, text.c_str(), interrupt != 0);
+    }
+
+    if (error == PRISM_OK && (features & PRISM_BACKEND_SUPPORTS_BRAILLE) && !brailleFailed)
+    {
+        const PrismError braille = prism_backend_braille(backend, text.c_str());
+        if (braille != PRISM_OK && braille != PRISM_ERROR_NOT_IMPLEMENTED)
         {
-            error = prism_backend_output(backend, text.c_str(), interrupt != 0);
-            if (error == PRISM_ERROR_NOT_IMPLEMENTED)
-                error = prism_backend_speak(backend, text.c_str(), interrupt != 0);
+            // No braille display, most likely: stop trying until the backend changes.
+            brailleFailed = true;
+            YagaLog::Write(std::format("[speech] {} braille: {}, braille output off", NameOf(backend),
+                                       prism_error_string(braille)));
         }
     }
     return error == PRISM_OK ? 1 : 0;
