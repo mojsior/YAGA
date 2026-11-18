@@ -1411,6 +1411,31 @@ void Run(const std::string &line)
         CommandRouteAll();
     else if (command == "navmesh")
         CommandNavMesh(in);
+    else if (command == "inv")
+    {
+        // inv open | next | prev | close: drives the hero's inventory through the engine, for testing its reading.
+        std::string what;
+        in >> what;
+        if (what == "open")
+            player->OpenInventory();
+        else if (what == "close")
+            player->CloseInventory();
+        else if (what == "next")
+            player->inventory2.NextItem();
+        else if (what == "prev")
+            player->inventory2.PrevItem();
+        else if (what == "give")
+        {
+            // inv give INSTANCE [count]: puts script items into the hero's inventory (e.g. ITAMARROW 30).
+            std::string instance;
+            int count = 1;
+            in >> instance >> count;
+            player->PutInInv(zSTRING(instance.c_str()), (std::max)(1, count));
+        }
+        oCItem *item = player->inventory2.GetSelectedItem();
+        Out(std::format("inv {}: open {}, selected {}", what, player->inventory2.IsOpen(),
+                        item ? item->name.ToChar() : "none"));
+    }
     else if (command == "navwp")
     {
         std::string name;
