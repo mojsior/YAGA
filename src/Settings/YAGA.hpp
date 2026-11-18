@@ -25,6 +25,8 @@ inline int DevCommands;
 inline std::string Language;
 // 1 = describe videos (the Gothic 1 intro) in the pauses of their dialogue, 0 = off.
 inline int AudioDescription;
+// 1 = the navigator walks on a navigation mesh built from the world's geometry, 0 = only on the game's way net.
+inline int NavMesh;
 } // namespace Settings
 
 #endif
@@ -46,6 +48,7 @@ void LoadSpeechEngineSettings()
     Settings::DevCommands = zoptions->ReadInt("YAGA", "DevCommands", 0);
     Settings::Language = zoptions->ReadString("YAGA", "Language", "auto").ToChar();
     Settings::AudioDescription = zoptions->ReadInt("YAGA", "AudioDescription", 1);
+    Settings::NavMesh = zoptions->ReadInt("YAGA", "NavMesh", 1);
 }
 } // namespace GOTHIC_NAMESPACE
 
